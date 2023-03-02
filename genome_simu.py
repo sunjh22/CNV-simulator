@@ -190,7 +190,6 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
         chrSeq[chrom] = sequence
     
     del chrSeq['none']
-    log("Finished loading genome")
 
     # modify the chromosomal sequences by CNVs
     out_paternal_file = open(paternal_file, 'w')
@@ -202,7 +201,7 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
         tmpSeqListMaternal = copy.deepcopy(tmpSeqListPaternal)
         for j, cnvRegion in enumerate(cnvListByChr[chrom][::-1]):
             start, end = int(cnvRegion[0]), int(cnvRegion[1])
-            print('Start is {:d}, end is {:d}'.format(start, end))
+            # print('Start is {:d}, end is {:d}'.format(start, end))
             paternalcn = paternalAllele[chrom][j]
             maternalcn = maternalAllele[chrom][j]
             if paternalcn != 1:
@@ -220,7 +219,7 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
         print(''.join(tmpSeqListMaternal), file=out_maternal_file)
 
 
-def callART(genome_file, output_file, read_length, fold_coverage=1):
+def CallART(genome_file, output_file, read_length, fold_coverage=1):
     """
     Call ART to generate artificial reads
     - genome_file: reference genome file in FASTA format
@@ -242,7 +241,7 @@ def callART(genome_file, output_file, read_length, fold_coverage=1):
                      "-o", output_file], stderr=None)
     
 
-def mergeReads(infile1, infile2, outfile):
+def MergeReads(infile1, infile2, outfile):
     """Concatenate two files by Linux Shell cat"""
     with open(outfile, 'w') as f:
         subprocess.call(['cat', infile1, infile2], stdout=f)

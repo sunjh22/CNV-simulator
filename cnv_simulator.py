@@ -67,7 +67,7 @@ def main():
 
     if not os.path.exists(outDir):
         os.makedirs(outDir, exist_ok=True)
-        
+
     if args.cnv_list is not None:
         log("An input CNV list is detected, skipping CNV list simulation step")
         cnvList = args.cnv_list
@@ -81,21 +81,25 @@ def main():
     GenerateGenomes(genome_file=genomeFile, cnv_list_file=cnvList, paternal_file=paternalGenomeFile, maternal_file=maternalGenomeFile)
     
     log("Finished simulating genomes, starting simulating NGS reads")
-    callART(genome_file=paternalGenomeFile, output_file=paternalReadsFile, read_length=readLength, fold_coverage=coverage)
-    callART(genome_file=maternalGenomeFile, output_file=maternalReadsFile, read_length=readLength, fold_coverage=coverage)
+    CallART(genome_file=paternalGenomeFile, output_file=paternalReadsFile, read_length=readLength, fold_coverage=coverage)
+    CallART(genome_file=maternalGenomeFile, output_file=maternalReadsFile, read_length=readLength, fold_coverage=coverage)
     
     log("Finished simulating NGS reads, starting merging reads from paternal and maternal genomes")
-    paternalFile1 = paternalReadsFile + '1.fastq'
-    paternalFile2 = paternalReadsFile + '2.fastq'
-    maternalFile1 = maternalReadsFile + '1.fastq'
-    maternalFile2 = maternalReadsFile + '2.fastq'
+    paternalFile1 = paternalReadsFile + '1.fq'
+    paternalFile2 = paternalReadsFile + '2.fq'
+    maternalFile1 = maternalReadsFile + '1.fq'
+    maternalFile2 = maternalReadsFile + '2.fq'
     outReadsFile1 = os.path.join(outDir, prefix+'_1.fq')
     outReadsFile2 = os.path.join(outDir, prefix+'_2.fq')
-    mergeReads(paternalFile1, maternalFile1, outReadsFile1)
-    mergeReads(paternalFile2, maternalFile2, outReadsFile2)
+    MergeReads(paternalFile1, maternalFile1, outReadsFile1)
+    MergeReads(paternalFile2, maternalFile2, outReadsFile2)
+
+    log("Start compressing merged fastq files")
+    subprocess.call(['gzip', outReadsFile1])
+    subprocess.call(['gzip', outReadsFile2])
 
     # remove unwanted intermediate files
-    # subprocess.call(['rm', paternalFile1, paternalFile2, maternalFile1, maternalFile2])
+    subprocess.call(['rm', paternalFile1, paternalFile2, maternalFile1, maternalFile2])
     log("All task finished!")
     
 
