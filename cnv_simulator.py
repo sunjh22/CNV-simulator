@@ -95,8 +95,8 @@ def main():
     MergeReads(paternalFile2, maternalFile2, outReadsFile2)
 
     log("Start compressing merged fastq files")
-    subprocess.call(['gzip', outReadsFile1])
-    subprocess.call(['gzip', outReadsFile2])
+    subprocess.call(['gzip', '--force', outReadsFile1])
+    subprocess.call(['gzip', '--force', outReadsFile2])
 
     # remove unwanted intermediate files
     subprocess.call(['rm', paternalFile1, paternalFile2, maternalFile1, maternalFile2])
