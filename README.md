@@ -4,22 +4,31 @@ A Python-based whole-genome haplotype-resolution copy number variation simulator
 Download the CNV-simulator
 
     git clone https://github.com/sunjh22/CNV-simulator.git
+    cd CNV-simulator
 
-Then go to the `CNV-simulator` directory.
-
-You are actually good to run CNV-simulator as follow:
+CNV-simulator has three modes:
+1. No input CNV list is provided, CNV-simulator will generate one and simulate CNVs based on it.
 
     ./cnv_simulator.py -o /path/to/store/simulated/data -a prefix_of_sample -c desired_coverage reference_genome resource/access-excludes.hg38.analysisSet.bed
 
-You can also specify the number of CNVs to be simulated, minimum, maximum and average CNV length.
+2. An input CNV list is provided in the bed format with four columns: chrom start end cn, CNV-simulator directly simulate CNVs based on it.
 
-The detailed parameters of CNV-simulator
+    ./cnv_simulator.py -o /path/to/store/simulated/data -a prefix_of_sample -i /path/to/a/cnv/list/file -c desired_coverage reference_genome resource/access-excludes.hg38.analysisSet.bed
 
-    Usage: cnv_simulator.py [-h] [-v] [-o OUTPUT_DIR] [-a PREFIX] [-l READ_LENGTH]
-                            [-i CNV_LIST] [-c COVERAGE] [-n CNV_NUMBER]
-                            [-b CNV_MINIMUM_LENGTH] [-B CNV_MAXIMUM_LENGTH]
-                            [-e CNV_EXPO_SCALE] [-p AMPLIFY_PROP]
-                            genome access
+3. An input CNV list is provided as in mode 2, but users want to simulate new CNVs on top of the existed ones.
+
+    ./cnv_simulator.py -o /path/to/store/simulated/data -a prefix_of_sample -i /path/to/a/cnv/list/file -A True -c desired_coverage reference_genome resource/access-excludes.hg38.analysisSet.bed
+
+Users could specify the number of CNVs to be simulated (-n), minimum (-b), maximum (-B) and lambda (-e) of CNV length, lambda is the parameter of exponential distribution that CNV length follows. A reference genome in fasta format is necessary.
+
+Following is the detailed parameters of CNV-simulator.
+
+    Usage: cnv_simulator [-h] [-v] [-o OUTPUT_DIR] [-a PREFIX] [-l READ_LENGTH]
+                     [-i CNV_LIST] [-A APPEND_LIST] [-c COVERAGE]
+                     [-n CNV_NUMBER] [-b CNV_MINIMUM_LENGTH]
+                     [-B CNV_MAXIMUM_LENGTH] [-e CNV_EXPO_SCALE]
+                     [-p AMPLIFY_PROP]
+                     genome access
 
     Simulate whole-genome level haplotype-resolved CNVs and generate NGS reads
 
@@ -43,6 +52,9 @@ The detailed parameters of CNV-simulator
                             path to a CNV list file in BED format chr | start |
                             end | cn. If not passed, it is randomly generated
                             using CNV list parameters below (default: None)
+    -A APPEND_LIST, --append_list APPEND_LIST
+                            generate some new CNVs and append them into the user-
+                            provided CNV list (default: False)
     -c COVERAGE, --coverage COVERAGE
                             coverage for reads simulation (default: 1)
 
@@ -56,8 +68,8 @@ The detailed parameters of CNV-simulator
     -B CNV_MAXIMUM_LENGTH, --cnv_maximum_length CNV_MAXIMUM_LENGTH
                             maximum length of each CNV region (default: 2000000)
     -e CNV_EXPO_SCALE, --cnv_expo_scale CNV_EXPO_SCALE
-                            scale of a exponential distribution for simulating CNV
-                            length (default: 200000)
+                            scale of a exponential distribution for simulating the
+                            length of CNV (default: 200000)
     -p AMPLIFY_PROP, --amplify_prop AMPLIFY_PROP
                             percentage of amplifications in range [0.0: 1.0].
                             (default: 0.5)

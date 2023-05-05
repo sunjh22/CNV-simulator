@@ -30,6 +30,8 @@ def main():
                         help="read length (bp)")
     parser.add_argument("-i" ,"--cnv_list", type=str, default=None, \
                         help="path to a CNV list file in BED format chr | start | end | cn. If not passed, it is randomly generated using CNV list parameters below")
+    parser.add_argument("-A", "--append_list", type=str, default='False', \
+                        help="generate some new CNVs and append them into the user-provided CNV list")
     parser.add_argument("-c" ,"--coverage", type=float, default=1, \
                         help="coverage for reads simulation")
     
@@ -42,7 +44,7 @@ def main():
     cnv_sim_group.add_argument("-B", "--cnv_maximum_length", type=int, default=2000000, \
                                help="maximum length of each CNV region")
     cnv_sim_group.add_argument("-e", "--cnv_expo_scale", type=int, default=200000, \
-                               help="scale of a exponential distribution for simulating CNV length")
+                               help="scale of a exponential distribution for simulating the length of CNV")
     cnv_sim_group.add_argument("-p", "--amplify_prop", type=float, default=0.50, \
                         help="percentage of amplifications in range [0.0: 1.0].")
     
@@ -69,13 +71,16 @@ def main():
         os.makedirs(outDir, exist_ok=True)
 
     if args.cnv_list is not None:
-        log("An input CNV list is detected, skipping CNV list simulation step")
         cnvList = args.cnv_list
+        log("An input CNV list is detected at " + repr(cnvList))
+        if args.append_list == 'True':
+            log("Appending mode is activated, simulate new CNVs and append them into existing list")
+            GenerateCNVList(access_file=accessFile, output_file=cnvList, cnv_num=cnvNum, p_amplify=amplifyProp, min_length=minCnvLength, max_length=maxCnvLength, exp_length=expCnvLength, append=True)
     else:
         log("No CNV list was detected, start simulating a CNV list")
         cnvList = os.path.join(outDir, prefix+'_cnvList.bed')
-        GenerateCNVList(access_file=accessFile, output_file=cnvList, cnv_num=cnvNum, p_amplify=amplifyProp, min_length=minCnvLength, max_length=maxCnvLength, exp_length=expCnvLength)
-        log("Simulated CNV list is in " + repr(cnvList))
+        GenerateCNVList(access_file=accessFile, output_file=cnvList, cnv_num=cnvNum, p_amplify=amplifyProp, min_length=minCnvLength, max_length=maxCnvLength, exp_length=expCnvLength, append=False)
+        log("Simulated CNV list is at " + repr(cnvList))
 
     log("Start simulating diploid genomes")
     GenerateGenomes(genome_file=genomeFile, cnv_list_file=cnvList, paternal_file=paternalGenomeFile, maternal_file=maternalGenomeFile)
