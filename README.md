@@ -3,8 +3,15 @@ A Python-based whole-genome haplotype-resolution copy number variation simulator
 
 ## Download the CNV-simulator
 
-    git clone https://github.com/sunjh22/CNV-simulator.git
-    cd CNV-simulator
+        git clone https://github.com/sunjh22/CNV-simulator.git
+        cd CNV-simulator
+
+Download ART_illumina and put it into environment path.
+
+        wget -O art.tgz https://www.niehs.nih.gov/research/resources/assets/docs/artbingreatsmokymountains04.17.16linux64.tgz
+        tar -xvzf art.tgz -C ART/
+        echo "export PATH=PATH:~/ART/art_bin_GreatSmokyMountains" >> .bashrc
+        source .bashrc
 
 ## Usage
 
