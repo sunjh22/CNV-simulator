@@ -210,7 +210,6 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
         for line in f:
             line = line.rstrip()
             if line.startswith('>'):
-                print(line)
                 if line[1:] not in chrs:
                     continue
                 else:
@@ -222,7 +221,6 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
         
         chrSeq[chrom] = sequence
     
-    print(chrSeq.keys())
     del chrSeq['none']
 
     # modify the chromosomal sequences by CNVs

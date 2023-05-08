@@ -55,7 +55,7 @@ def main():
     outDir = args.output_dir
     prefix = args.prefix
     readLength = args.read_length
-    coverage = args.coverage
+    coverage = args.coverage / 2
     cnvNum = args.cnv_number
     minCnvLength = args.cnv_minimum_length
     maxCnvLength = args.cnv_maximum_length
