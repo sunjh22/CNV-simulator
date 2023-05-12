@@ -15,6 +15,8 @@ Download ART_illumina and put it into environment path.
 
 ## Usage
 
+Note: Following reference genome must be from **UCSC**.
+
 CNV-simulator has three modes:
 1. No input CNV list is provided, CNV-simulator will generate one and simulate CNVs based on it.
 
@@ -28,7 +30,7 @@ CNV-simulator has three modes:
 
         ./cnv_simulator.py -o /path/to/store/simulated/data -a prefix_of_sample -i /path/to/a/cnv/list/file -A True -c desired_coverage reference_genome resource/access-excludes.hg38.analysisSet.bed
 
-Users could specify the number of CNVs to be simulated (-n), minimum (-b), maximum (-B) and lambda (-e) of CNV length, lambda is the parameter of exponential distribution that CNV length follows. A reference genome in fasta format is necessary.
+Users could specify the number of CNVs to be simulated (-n), minimum (-b), maximum (-B) and lambda (-e) of CNV length, lambda is the parameter of exponential distribution that CNV length follows.
 
 ## Parameters
 

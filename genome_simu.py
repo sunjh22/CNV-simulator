@@ -100,6 +100,8 @@ def GenerateCNVList(access_file, output_file, cnv_num, p_amplify=0.5, min_length
         for line in f:
             accessRegion = line.strip().split('\t')
             chrom = accessRegion[0]
+            if chrom == 'chrY':
+                continue
             start, end = int(accessRegion[1]), int(accessRegion[2])
             accessRegionByChr[chrom].append([start, end])
             if chrom not in chrLenDict.keys():
@@ -109,7 +111,7 @@ def GenerateCNVList(access_file, output_file, cnv_num, p_amplify=0.5, min_length
     
     # estimate how many CNVs shoul be simulated in each chromosome according to total CNV number 
     # and chromosome length
-    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX', 'chrY']
+    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX']
     cnvNumDict = {}
     for i in range(1,len(chrs)):
         chrom = chrs[i]
@@ -169,7 +171,7 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
     return: None, write two genomes (paternal and maternal) with varied sequences into files
     """
 
-    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX', 'chrY']
+    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX']
     
     # read CNV list file
     cnv_list = []
