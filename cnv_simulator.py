@@ -76,6 +76,7 @@ def main():
         if args.append_list == 'True':
             log("Appending mode is activated, simulate new CNVs and append them into existing list")
             GenerateCNVList(access_file=accessFile, output_file=cnvList, cnv_num=cnvNum, p_amplify=amplifyProp, min_length=minCnvLength, max_length=maxCnvLength, exp_length=expCnvLength, append=True)
+            subprocess.call(['sort', '-Vk 1 -k 2,3n', cnvList, '-o', cnvList])
     else:
         log("No CNV list was detected, start simulating a CNV list")
         cnvList = os.path.join(outDir, prefix+'_cnvList.bed')

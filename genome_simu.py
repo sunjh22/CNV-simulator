@@ -7,6 +7,7 @@ import numpy as np
 import copy
 import subprocess
 import datetime
+import csv
 
 def log(message):
     print('[CNV Simulator {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "] " + message)
@@ -16,7 +17,7 @@ def overlapCNV(cnv_region, cnv_list):
     """Check whether the single CNV overlaps with a list of CNVs"""
     if not cnv_list:
         return False
-    c1, s1, e1 = cnv_region[0], cnv_region[1], cnv_region[2]
+    c1, s1, e1 = cnv_region
     for x in cnv_list:
         c2, s2, e2 = x[0], int(x[1]), int(x[2])
         if c1 == c2 and (s1 < s2 < e1 or s1 < e2 < e1):
@@ -43,15 +44,12 @@ def SimulateCNV(chrom, access_region_by_chr, cnv_num, p_amplify=0.5, min_length=
 
     while cnv_num:
         # randomly choose a region to generate CNV
-        regionIdx = random.randrange(len(access_region_by_chr))
-        accessRegion = access_region_by_chr[regionIdx]
-        regionStart = accessRegion[0]
-        regionEnd = accessRegion[1]
+        accessRegion = access_region_by_chr[random.randrange(len(access_region_by_chr))]
+        regionStart, regionEnd = accessRegion
         # randomly generate the length of the CNV, follow exponential distribution, scale=200,000
         tmpCnvLength = round(np.random.exponential(exp_length))
         cnvLength = tmpCnvLength + min_length
-        if cnvLength > max_length:
-            cnvLength = max_length
+        cnvLength = max_length if cnvLength > max_length else cnvLength
         # randomly generate the start location of the CNV
         startLoc = random.randint(regionStart, regionEnd)
         
@@ -94,77 +92,51 @@ def GenerateCNVList(access_file, output_file, cnv_num, p_amplify=0.5, min_length
     """
 
     # get the total length of chromosomal accessible regions
-    chrLenDict = {}
+    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX']
+    chrLenDict = {chrom:0 for chrom in chrs}
     accessRegionByChr = defaultdict(list)
     with open(access_file) as f:
         for line in f:
             accessRegion = line.strip().split('\t')
             chrom = accessRegion[0]
-            if chrom == 'chrY':
+            if chrom not in chrs:
                 continue
             start, end = int(accessRegion[1]), int(accessRegion[2])
             accessRegionByChr[chrom].append([start, end])
-            if chrom not in chrLenDict.keys():
-                chrLenDict[chrom] = end - start
-            else:
-                chrLenDict[chrom] += end - start
+            chrLenDict[chrom] += end - start
     
     # estimate how many CNVs shoul be simulated in each chromosome according to total CNV number 
     # and chromosome length
-    chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX']
     cnvNumDict = {}
     for i in range(1,len(chrs)):
         chrom = chrs[i]
-        tmpCnvNum = round(chrLenDict[chrom] * cnv_num / sum(chrLenDict.values()))
-        cnvNumDict[chrom] = tmpCnvNum
+        cnvNumDict[chrom] = round(chrLenDict[chrom] * cnv_num / sum(chrLenDict.values()))
     
     cnvNumDict['chr1'] = cnv_num - sum(cnvNumDict.values())
 
-    # simulate CNVs by chromosome
-    # if the file of CNV list exists and need appending new CNVs
+    # simulate CNVs by chromosome, depending on the mode
     if append:
-        cnv_list = []
-        with open(output_file, 'r') as f:
-            for x in f:
-                cnv_list.append(x.rstrip().split('\t'))
-
-        simuCnvByChr = {}
-        for chrom in cnvNumDict.keys():
-            cnvNum = cnvNumDict[chrom]
-            accessRegion = accessRegionByChr[chrom]
-            tmpCnvList = SimulateCNV(chrom, accessRegion, cnvNum, p_amplify, min_length, max_length, exp_length, append=True, cnv_list=cnv_list)
-            simuCnvByChr[chrom] = tmpCnvList
-        
-        # get final simulated CNV list
-        finalCnvList = []
-        for chrom in chrs:
-            finalCnvList += simuCnvByChr[chrom]
-        
-        # write or append CNV list into a file
-        with open(output_file, 'a') as f:
-            for x in finalCnvList:
-                print(*x, sep='\t', file=f)
+        mode = 'a'
+        cnv_list = list(csv.reader(open(output_file, 'r'), delimiter='\t'))
     else:
-        # if the file of CNV list does not exist
-        simuCnvByChr = {}
-        for chrom in cnvNumDict.keys():
-            cnvNum = cnvNumDict[chrom]
-            accessRegion = accessRegionByChr[chrom]
-            tmpCnvList = SimulateCNV(chrom, accessRegion, cnvNum, p_amplify, min_length, max_length, exp_length)
-            simuCnvByChr[chrom] = tmpCnvList
+        mode = 'w'
+        cnv_list = None
         
-        # get final simulated CNV list
-        finalCnvList = []
-        for chrom in chrs:
-            finalCnvList += simuCnvByChr[chrom]
-        
-        # write CNV list into a file
-        with open(output_file, 'w') as f:
-            for x in finalCnvList:
-                print(*x, sep='\t', file=f)
+    simuCnvByChr = {}
+    for chrom in cnvNumDict.keys():
+        cnvNum = cnvNumDict[chrom]
+        accessRegion = accessRegionByChr[chrom]
+        tmpCnvList = SimulateCNV(chrom, accessRegion, cnvNum, p_amplify, min_length, max_length, exp_length, append=append, cnv_list=cnv_list)
+        simuCnvByChr[chrom] = tmpCnvList
+    
+    # get final simulated CNV list
+    finalCnvList = [cnvs for chrom in chrs for cnvs in simuCnvByChr[chrom]]
+    
+    # write or append CNV list into a file
+    csv.writer(open(output_file, mode=mode, newline=''), delimiter='\t').writerows(finalCnvList)
         
 
-def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_file=None):
+def GenerateGenomes(genome_file, cnv_list_file, paternal_file='paternal.fa', maternal_file='maternal.fa'):
     """
     - genome_file: a human genome fasta file
     - cnv_list_file: a file with a list of CNV regions
@@ -174,19 +146,15 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
     chrs = ['chr'+str(i) for i in range(1,23)] + ['chrX']
     
     # read CNV list file
-    cnv_list = []
-    with open(cnv_list_file, 'r') as f:
-        for x in f:
-            x = x.strip().split('\t')
-            cnv_list.append(x)
+    cnv_list = list(csv.reader(open(cnv_list_file, 'r'), delimiter='\t'))
 
     # determine the CNV allele by chromosome, to make it simple, put all variations into one chromosome    
     # also aggregate CNV list by chromosome
     cnvListByChr = defaultdict(list)
     paternalAllele, maternalAllele = defaultdict(list), defaultdict(list)
     for x in cnv_list:
-        tmpChrom = x[0]
-        cn = int(x[3])
+        
+        tmpChrom, cn = x[0], int(x[3])
         cnvListByChr[tmpChrom].append(x[1:3])
         if cn == 0:
             paternalAllele[tmpChrom].append(0)
@@ -195,7 +163,7 @@ def GenerateGenomes(genome_file, cnv_list_file, paternal_file=None, maternal_fil
             paternalAllele[tmpChrom].append(1)
             maternalAllele[tmpChrom].append(cn-1)
 
-    # reverse the CNV in the list for later easier sequence manipulation
+    # reverse the CNV in the list for easier sequence manipulation
     for x in chrs:
         paternalAllele[x] = paternalAllele[x][::-1]
         maternalAllele[x] = maternalAllele[x][::-1]
